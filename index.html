@@ -387,7 +387,7 @@ $('file').onchange=()=>{const f=$('file').files[0];if(!f)return;const img=new Im
 $('profForm').onsubmit=async e=>{e.preventDefault();myProf.name=$('pName').value.trim();myProf.status=$('pStatus').value.trim();myProf.findable=$('pFind').checked;paintMe();
  try{localStorage.setItem('bz_prof',JSON.stringify(myProf))}catch(_){}
  if(db&&myId!=='local'){try{await db.doc('profiles/'+myId).set({...myProf,code:myCode,at:Date.now()})}catch(_){toast('Не удалось сохранить на сервере');return}}
- toast('Профиль сохранён');setTimeout(()=>show(null),500)};
+ toast('Профиль сохранён');setTimeout(closePortal,400)};
 try{const sv=JSON.parse(localStorage.getItem('bz_prof')||'null');if(sv)myProf=sv}catch(_){}
 
 let showArch=false;
