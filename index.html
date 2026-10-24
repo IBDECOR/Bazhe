@@ -157,6 +157,8 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
 .idrow div{flex:1;min-width:0}.idrow small{display:block;color:var(--mute);font-size:12px}
 .idrow b{font-size:22px;letter-spacing:.14em;font-variant-numeric:tabular-nums}
 .copy{height:38px;padding:0 14px;border-radius:19px;background:rgba(255,255,255,.12);font-weight:600}
+.bub{position:relative}.ubadge{position:absolute;top:-2px;left:calc(50% + 18px);min-width:24px;height:24px;padding:0 7px;border-radius:12px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff6a5b,#ff2d55);box-shadow:0 0 0 3px rgba(5,6,13,.6),0 4px 12px rgba(255,45,85,.6);animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+.petal .badge{position:absolute;top:-4px;left:calc(50% + 14px);min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff6a5b,#ff2d55);box-shadow:0 0 0 3px rgba(5,6,13,.5),0 4px 12px rgba(255,45,85,.6);z-index:2;text-shadow:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -328,7 +330,7 @@ let showArch=false;
 function avaFill(el,r){r=disp(r);el.innerHTML='';if(r.photo){const im=document.createElement('img');im.src=r.photo;im.alt='';el.appendChild(im)}else el.textContent=r.emoji||'💬'}
 function bubble(r){const b=document.createElement('button');b.className='bub';b.setAttribute('aria-label',disp(r).name);
  const a=document.createElement('div');a.className='ava';avaFill(a,r);const t=document.createElement('b');t.textContent=disp(r).name;const sm=document.createElement('small');sm.textContent=r.last||'Пока тихо';
- b.append(a,t,sm);let timer=0,long=false,tapT=0,single=0;
+ b.append(a,t,sm);const ur=unread(r);if(ur>0&&r.id!==curRoom?.id){const bd=document.createElement('span');bd.className='ubadge';bd.textContent=ur>99?'99+':ur;b.appendChild(bd);sm.style.color='#fff';sm.style.fontWeight='600'}let timer=0,long=false,tapT=0,single=0;
  b.addEventListener('pointerdown',()=>{long=false;b.classList.add('press');timer=setTimeout(()=>{long=true;b.classList.remove('press');if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){};actionSheet(r)},520)});
  const cancel=()=>{clearTimeout(timer);b.classList.remove('press')};
  b.addEventListener('pointerup',cancel);b.addEventListener('pointerleave',cancel);b.addEventListener('pointercancel',cancel);b.addEventListener('contextmenu',e=>e.preventDefault());
@@ -364,7 +366,11 @@ function editSheet(r){sheet((sh,close)=>{const a=head(sh,r);a.title='Смени�
  sh.appendChild(btn('Отмена','',close))})}
 function cropTo(f,S,cb){const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),m=Math.min(img.width,img.height);x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);URL.revokeObjectURL(img.src);cb(c.toDataURL('image/jpeg',.8))};img.src=URL.createObjectURL(f)}
 
-function fmt(ts){const d=new Date(ts);return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
+const ms=v=>v&&v.toMillis?v.toMillis():(v||0);
+const unread=r=>Math.max(0,(r.count||0)-((r.read||{})[myId]||0));
+function markRead(r){if(!db||!r||unread(r)<=0)return;db.doc('rooms/'+r.id).update({['read.'+myId]:r.count||0}).catch(()=>{})}
+function paintBadges(){const tot=rooms.reduce((n,r)=>n+(r===curRoom||r.id===curRoom?.id?0:unread(r)),0);const p=petEls[0];let b=p.querySelector('.badge');if(tot>0){if(!b){b=document.createElement('span');b.className='badge';p.appendChild(b);b.animate([{transform:'scale(0)'},{transform:'scale(1.3)'},{transform:'scale(1)'}],{duration:450,easing:'cubic-bezier(.3,1.6,.5,1)'})}b.textContent=tot>99?'99+':tot}else if(b)b.remove();try{if(navigator.setAppBadge)tot?navigator.setAppBadge(tot):navigator.clearAppBadge()}catch(_){}}
+function fmt(ts){const d=new Date(ms(ts));return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
 async function renderMsgs(list){await names([...new Set(list.map(m=>m.from))]);const box=$('msgs');box.innerHTML='';
  if(!list.length){const e=document.createElement('p');e.className='empty';e.textContent='Напиши первое сообщение семье 👋';box.appendChild(e);return}
  list.forEach(m=>{const el=document.createElement('div');el.className='msg'+(m.from===myId?' mine':'');
@@ -373,14 +379,14 @@ async function renderMsgs(list){await names([...new Set(list.map(m=>m.from))]);c
   const tm=document.createElement('time');tm.textContent=fmt(m.at);el.appendChild(tm);box.appendChild(el)});
  box.scrollTop=box.scrollHeight;}
 
-function openRoom(r){curRoom=r;$('roomTitle').textContent=disp(r).name;avaFill($('roomAva'),r);show('pRoom');
- if(db){unsubMsgs=db.collection('rooms/'+r.id+'/msgs').orderBy('at','asc').limit(300).onSnapshot(s=>renderMsgs(s.docs.map(d=>d.data())),e=>toast('Не удалось загрузить сообщения'));}
+function openRoom(r){curRoom=r;markRead(r);paintBadges();$('roomTitle').textContent=disp(r).name;avaFill($('roomAva'),r);show('pRoom');
+ if(db){unsubMsgs=db.collection('rooms/'+r.id+'/msgs').orderBy('at','asc').limit(300).onSnapshot(s=>renderMsgs(s.docs.map(d=>d.data({serverTimestamps:'estimate'}))),e=>toast('Не удалось загрузить сообщения'));}
  else renderMsgs(local.msgs[r.id]||[]);
  setTimeout(()=>$('text').focus(),450);}
-function closeRoom(){if(unsubMsgs){unsubMsgs();unsubMsgs=null}curRoom=null}
+function closeRoom(){if(unsubMsgs){unsubMsgs();unsubMsgs=null}curRoom=null;renderRooms();paintBadges()}
 
-async function send(text){text=text.trim();if(!text||!curRoom)return;const m={from:myId,text,at:Date.now()};
- if(db){try{await db.collection('rooms/'+curRoom.id+'/msgs').add(m);await db.doc('rooms/'+curRoom.id).update({last:text.slice(0,60),at:m.at})}catch(e){toast('Не отправилось. Проверь доступ к чату')}}
+async function send(text){text=text.trim();if(!text||!curRoom)return;const TS=firebase.firestore.FieldValue.serverTimestamp(),INC=firebase.firestore.FieldValue.increment(1);const m={from:myId,text,at:db?TS:Date.now()};
+ if(db){try{await db.collection('rooms/'+curRoom.id+'/msgs').add(m);await db.doc('rooms/'+curRoom.id).update({last:text.slice(0,60),at:TS,count:INC,['read.'+myId]:INC})}catch(e){toast('Не отправилось. Проверь доступ к чату')}}
  else{(local.msgs[curRoom.id]=local.msgs[curRoom.id]||[]).push(m);curRoom.last=text;renderMsgs(local.msgs[curRoom.id]);renderRooms()}}
 $('compose').onsubmit=e=>{e.preventDefault();const v=$('text').value;$('text').value='';send(v)};
 $('heart').onclick=()=>send('❤️');
@@ -432,7 +438,7 @@ auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];
   if(!ensured){ensured=true;const pr={name:myProf.name||acctName,status:myProf.status||'',avatar:myProf.avatar||'',code:myCode,findable:fam[myId]?.findable??true,at:Date.now()};
    if(!fam[myId]||fam[myId].code!==myCode)fdb.doc('profiles/'+myId).set(pr,{merge:true}).catch(()=>{});
    fdb.doc('lookup/'+myCode).set({uid:myId}).catch(()=>{});if(u.email)fdb.doc('lookup/'+u.email.toLowerCase()).set({uid:myId}).catch(()=>{})}},()=>{}));
- db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.at||0)-(a.at||0));renderRooms()},e=>toast('Нет доступа к чатам')));
+ db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>ms(b.at)-ms(a.at));if(curRoom){const c=rooms.find(x=>x.id===curRoom.id);if(c){Object.assign(curRoom,c);markRead(c)}}renderRooms();paintBadges()},e=>toast('Нет доступа к чатам')));
 });
 function authSheet(){sheet((sh,close)=>{let mode='in';const h=document.createElement('div');h.className='head';h.innerHTML='<div class="ava">✦</div><b>Вход в Bazhe</b>';sh.appendChild(h);
  const em=field(sh,'Почта','you@mail.ru',80);em.type='email';em.autocomplete='email';em.inputMode='email';
