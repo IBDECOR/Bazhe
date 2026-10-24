@@ -82,9 +82,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outlin
 .room>div{min-width:0;flex:1}
 .newroom,.compose{display:flex;gap:8px;align-items:center;padding:6px;border-radius:30px}
 .compose{margin-bottom:env(safe-area-inset-bottom,0px)}
-input[type=text]{flex:1;min-width:0;background:transparent;border:0;color:var(--fg);padding:10px 12px;font:inherit;font-size:16px}
+input[type=text],input[type=email],input[type=password]{-webkit-appearance:none;appearance:none;border-radius:14px;flex:1;min-width:0;background:transparent;border:0;color:var(--fg);padding:10px 12px;font:inherit;font-size:16px}
 input::placeholder{color:var(--mute)}
-input[type=text]:focus-visible{outline:none}
+input[type=text]:focus-visible,input[type=email]:focus-visible,input[type=password]:focus-visible{outline:none}
+.field{transition:border-color .25s,box-shadow .25s}.field:focus-within{border-color:rgba(255,170,110,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 4px rgba(255,138,61,.18),0 10px 30px rgba(0,0,0,.35)}
+input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 100px transparent inset;transition:background-color 9999s}
 .send{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,#ffb36b,#ff6a2b);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 18px rgba(255,106,43,.45)}
 .send svg{width:20px;fill:#fff}
 .msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-block:6px}
