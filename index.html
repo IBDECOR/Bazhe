@@ -248,6 +248,7 @@ body[data-bg=space] .stars,body[data-bg=onyx] .stars{opacity:1}
 .ics:active{transform:scale(.95)}.ics.on{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.18)}
 .ics .row{display:flex;gap:8px;justify-content:center}.ics .tile{width:40px;height:40px;border-radius:13px}.ics .tile svg{width:22px;height:22px}[data-ic=minimal].ics .tile svg{width:28px;height:28px}
 .ics b{font-size:13px}.ics em{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#fff;color:#000;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;opacity:0;transition:.3s}.ics.on em{opacity:1}
+body.kb .compose{margin-bottom:6px}body.kb .panel{padding-block:6px}body.kb .down{bottom:76px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -637,7 +638,7 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
 $('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
-const APP_VER='v31';$('verLbl').textContent='Версия '+APP_VER;
+const APP_VER='v32';$('verLbl').textContent='Версия '+APP_VER;
 async function hardUpdate(){const b=$('updBtn');b.disabled=true;b.textContent='Обновляю…';
  try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}
  location.replace(location.pathname+'?u='+Date.now())}
@@ -729,6 +730,16 @@ function paintIc(){const box=$('icsets');if(!box)return;const cur=document.body.
   b.innerHTML='<div class="row">'+['chat','photo','gear'].map(tileHTML).join('')+'</div><b></b><em>✓</em>';b.querySelector('b').textContent=t.n;
   b.onclick=()=>{setIc(t.k,true);petEls.forEach((p,i)=>p.querySelector('.tile').animate([{transform:'scale(.6)'},{transform:'scale(1.15)'},{transform:'none'}],{duration:450,delay:i*50,easing:'cubic-bezier(.3,1.6,.5,1)'}))};box.appendChild(b)})}
 try{setIc(localStorage.getItem('bz_ic')||'color')}catch(_){setIc('color')}
+
+
+/* ===== keyboard fit (iOS) ===== */
+(function(){const vv=window.visualViewport;if(!vv)return;const app=document.querySelector('.app');
+ const probe=document.createElement('div');probe.style.cssText='position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none';document.body.appendChild(probe);
+ function fit(){const kb=innerHeight-vv.height>120;document.body.classList.toggle('kb',kb);
+  if(kb){const top=probe.offsetHeight;app.style.height=(vv.height-top+ (vv.offsetTop>0?0:0))+'px';app.style.transform=`translateY(${vv.offsetTop}px)`;window.scrollTo(0,0);const m=$('msgs');if(m&&curRoom)m.scrollTop=m.scrollHeight}
+  else{app.style.height='';app.style.transform=''}}
+ vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);addEventListener('focusin',()=>setTimeout(fit,50));addEventListener('focusout',()=>setTimeout(fit,80));
+ document.addEventListener('touchmove',e=>{if(document.body.classList.contains('kb')&&!e.target.closest('.msgs,.list,.sheet,.prof'))e.preventDefault()},{passive:false})})();
 
 /* ===== push notifications ===== */
 const PUSH_URL='https://bazhe-push.barkanchik99.workers.dev';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
