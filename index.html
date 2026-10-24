@@ -189,6 +189,9 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
 .down{position:absolute;right:6px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;display:grid;place-items:center;z-index:3;opacity:0;transform:translateY(16px) scale(.8);pointer-events:none;transition:.3s cubic-bezier(.3,1.4,.5,1)}
 .down.on{opacity:1;transform:none;pointer-events:auto}.down svg{width:22px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .down b{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;font-size:11px;display:grid;place-items:center;background:linear-gradient(135deg,#ff6a5b,#ff2d55)}
+.pushban{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:20px;text-align:left;width:100%}.pushban>span{font-size:22px;animation:ring 2.4s ease-in-out infinite}.pushban div{display:flex;flex-direction:column;min-width:0}.pushban b{font-size:15px}.pushban small{font-size:12px;color:var(--mute)}
+@keyframes ring{0%,70%,100%{transform:none}75%{transform:rotate(14deg)}80%{transform:rotate(-12deg)}85%{transform:rotate(8deg)}90%{transform:rotate(-4deg)}}
+#pushBtn:disabled{opacity:.75}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -208,6 +211,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
 
   <section class="panel" id="pChats" style="position:absolute">
     <div class="bar lg"><button class="back lg" data-back aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Чаты</h2></div>
+    <button type="button" class="pushban lg" id="pushBanner" hidden><span>🔔</span><div><b>Включи уведомления</b><small>Чтобы сообщения приходили, даже когда Bazhe закрыт</small></div></button>
     <div class="list grid" id="rooms"></div>
     <button class="fab" id="fab" aria-label="Создать"><span></span></button>
     <div class="fabmenu" id="fabMenu" hidden>
@@ -242,6 +246,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
       <div class="idrow lg"><div><small>Мой ID для друзей</small><b id="myCode">——————</b></div><button type="button" class="copy" id="copyId">Копировать</button></div>
       <div class="field lg"><label for="pName">Имя</label><input type="text" id="pName" maxlength="30" placeholder="Как тебя видят родные"></div>
       <div class="field lg"><label for="pStatus">Статус</label><input type="text" id="pStatus" maxlength="60" placeholder="Например: на работе до 18:00"></div>
+      <button type="button" class="act" id="pushBtn" style="width:100%;max-width:400px">Включить уведомления</button>
       <label class="idrow lg" style="cursor:pointer"><div><small>Конфиденциальность</small><span style="font-weight:600">Находить меня по почте</span></div><input type="checkbox" id="pFind" checked style="width:22px;height:22px;accent-color:#ff8a3d"></label>
       <button class="save" id="saveProf">Сохранить</button>
       <p class="sect" style="text-transform:none;letter-spacing:0" id="myEmail"></p>
@@ -504,7 +509,7 @@ async function send(text){text=text.trim();if(!text||!curRoom)return;
  if(editing){const e=editing;editing=null;paintBar();if(text!==e.text&&db){try{await db.doc('rooms/'+curRoom.id+'/msgs/'+e.id).update({text,edited:true})}catch(_){toast('Не удалось изменить')}}return}
  const TS=firebase.firestore.FieldValue.serverTimestamp(),INC=firebase.firestore.FieldValue.increment(1);const m={from:myId,text,at:db?TS:Date.now()};
  if(replyTo){m.reply=replyTo;replyTo=null;paintBar()}
- if(db){try{await db.collection('rooms/'+curRoom.id+'/msgs').add(m);await db.doc('rooms/'+curRoom.id).update({last:text.slice(0,60),at:TS,count:INC,['read.'+myId]:INC})}catch(e){toast('Не отправилось. Проверь доступ к чату')}}
+ if(db){try{await db.collection('rooms/'+curRoom.id+'/msgs').add(m);await db.doc('rooms/'+curRoom.id).update({last:text.slice(0,60),at:TS,count:INC,['read.'+myId]:INC});notifyRoom(curRoom,text)}catch(e){toast('Не отправилось. Проверь доступ к чату')}}
  else{(local.msgs[curRoom.id]=local.msgs[curRoom.id]||[]).push(m);curRoom.last=text;renderMsgs(local.msgs[curRoom.id]);renderRooms()}}
 $('compose').onsubmit=e=>{e.preventDefault();const v=$('text').value;$('text').value='';send(v)};
 $('heart').onclick=()=>send('❤️');
@@ -545,10 +550,33 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   const r={type:'group',name:n,emoji:EMO[Math.floor(Math.random()*EMO.length)],members:mem,last:'',at:Date.now()};
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
+$('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
 $('logout').onclick=async()=>{await auth.signOut();show(null);toast('Ты вышел')};
 $('copyId').onclick=async()=>{try{await navigator.clipboard.writeText(myCode);toast('ID скопирован')}catch(_){const r=document.createRange();r.selectNodeContents($('myCode'));const se=getSelection();se.removeAllRanges();se.addRange(r);toast('Выделил ID, скопируй вручную')}};
 
 rooms=local.rooms;renderRooms();paintMe();
+
+/* ===== push notifications ===== */
+const PUSH_URL='';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
+const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+function pushState(){if(!pushOK())return'no';if(Notification.permission==='denied')return'denied';return Notification.permission==='granted'&&(myProf.pushOn!==false)&&(fam[myId]?.pushSubs||[]).length?'on':'off'}
+function paintPush(){const st=pushState(),b=$('pushBtn'),bn=$('pushBanner');
+ if(b){b.textContent=st==='on'?'Уведомления включены ✓':st==='denied'?'Уведомления запрещены в настройках iPhone':st==='no'?'Добавь Bazhe на экран «Домой», чтобы включить уведомления':'Включить уведомления';b.disabled=st!=='off';b.classList.toggle('main',st==='off')}
+ if(bn)bn.hidden=!(st==='off'&&authed)}
+async function enablePush(){try{const p=await Notification.requestPermission();if(p!=='granted'){paintPush();toast('Разрешение не дано');return}
+ const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+ if(!sub){const k=VAPID_PUB.replace(/-/g,'+').replace(/_/g,'/');const raw=atob(k+'='.repeat((4-k.length%4)%4));sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))})}
+ await db.doc('profiles/'+myId).set({pushSubs:firebase.firestore.FieldValue.arrayUnion(JSON.parse(JSON.stringify(sub)))},{merge:true});
+ toast('Уведомления включены');setTimeout(paintPush,600)}catch(e){toast('Не получилось включить: '+(e.message||e))}}
+async function notifyRoom(room,text){if(!PUSH_URL||!auth.currentUser)return;try{
+ const to=(room.members||[]).filter(u=>u!==myId),subs=[];to.forEach(u=>(fam[u]?.pushSubs||[]).forEach(x=>subs.push(x)));if(!subs.length)return;
+ const me=myProf.name||acctName||'Bazhe',title=room.type==='group'?(room.name+' · '+me):me;
+ const tok=await auth.currentUser.getIdToken();
+ fetch(PUSH_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({subs,title,body:text,tag:room.id})}).catch(()=>{})}catch(_){}}
+let pendingRoom=new URLSearchParams(location.search).get('room')||'';
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.room){pendingRoom=e.data.room;tryOpenPending()}});
+function tryOpenPending(){if(!pendingRoom)return;const r=rooms.find(x=>x.id===pendingRoom);if(!r)return;pendingRoom='';history.replaceState(null,'',location.pathname);if(curRoom&&curRoom.id===r.id)return;if(curRoom)closeRoom();if(bloomOpen===false)toggleBloom();show('pChats');setTimeout(()=>openRoom(r),350)}
+
 /* ---- Firebase ---- */
 firebase.initializeApp({apiKey:"AIzaSyAnFJwx4HsrXWZ6a2oAvXbffn0xtVWSRqo",authDomain:"bazhe-chat.firebaseapp.com",projectId:"bazhe-chat",storageBucket:"bazhe-chat.firebasestorage.app",messagingSenderId:"329981670238",appId:"1:329981670238:web:f153fc47aaf2d26c5095cf"});
 const auth=firebase.auth(),fdb=firebase.firestore();let authed=false,unsubs=[];
@@ -557,11 +585,11 @@ auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];
  authed=true;myId=u.uid;acctName=(u.email||'').split('@')[0];myCode=codeOf(myId);$('myCode').textContent=myCode;$('myEmail').textContent=u.email||'';paintMe();
  $('hint').textContent='Коснись аватарки, чтобы раскрыть меню';
  let ensured=false;
- unsubs.push(fdb.collection('profiles').onSnapshot(s=>{fam={};s.docs.forEach(x=>fam[x.id]=x.data({serverTimestamps:'estimate'}));calibrate();if(curRoom)paintSub();if(fam[myId])myProf={...myProf,...fam[myId]};paintMe();renderRooms();
+ unsubs.push(fdb.collection('profiles').onSnapshot(s=>{fam={};s.docs.forEach(x=>fam[x.id]=x.data({serverTimestamps:'estimate'}));calibrate();if(curRoom)paintSub();paintPush();if(fam[myId])myProf={...myProf,...fam[myId]};paintMe();renderRooms();
   if(!ensured){ensured=true;const pr={name:myProf.name||acctName,status:myProf.status||'',avatar:myProf.avatar||'',code:myCode,findable:fam[myId]?.findable??true,at:Date.now()};
    if(!fam[myId]||fam[myId].code!==myCode)fdb.doc('profiles/'+myId).set(pr,{merge:true}).catch(()=>{});
    fdb.doc('lookup/'+myCode).set({uid:myId}).catch(()=>{});if(u.email)fdb.doc('lookup/'+u.email.toLowerCase()).set({uid:myId}).catch(()=>{})}},()=>{}));
- db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>ms(b.at)-ms(a.at));if(curRoom){const c=rooms.find(x=>x.id===curRoom.id);if(c){Object.assign(curRoom,c);markRead(c);paintTicks()}}rooms.forEach(trackTyping);if(curRoom){paintSub()}renderRooms();paintBadges()},e=>toast('Нет доступа к чатам')));
+ db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>ms(b.at)-ms(a.at));if(curRoom){const c=rooms.find(x=>x.id===curRoom.id);if(c){Object.assign(curRoom,c);markRead(c);paintTicks()}}rooms.forEach(trackTyping);if(curRoom){paintSub()}renderRooms();paintBadges();tryOpenPending()},e=>toast('Нет доступа к чатам')));
 });
 function authSheet(){sheet((sh,close)=>{let mode='in';const h=document.createElement('div');h.className='head';h.innerHTML='<div class="ava">✦</div><b>Вход в Bazhe</b>';sh.appendChild(h);
  const em=field(sh,'Почта','you@mail.ru',80);em.type='email';em.autocomplete='email';em.inputMode='email';
