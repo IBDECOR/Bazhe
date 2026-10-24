@@ -181,7 +181,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
 .quote{display:flex;flex-direction:column;border-left:3px solid #5ee7ff;padding:3px 8px;margin:2px 0 5px;border-radius:6px;background:rgba(255,255,255,.08);font-size:13px;cursor:pointer;max-width:100%}
 .quote b{color:#5ee7ff;font-size:12px}.quote span{color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .msg.del .tx{font-style:italic;color:var(--mute)}
-.reacts{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;clear:both}.rc{font-size:13px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14)}.rc.me{background:rgba(94,231,255,.25);border-color:rgba(94,231,255,.6)}
+.msg.hasre{margin-bottom:14px}.reacts{position:absolute;bottom:-15px;left:10px;display:flex;gap:4px;z-index:2}.msg.mine .reacts{left:auto;right:10px}.msg.big .reacts{bottom:-12px}.rc{font-size:13px;line-height:1;height:24px;padding:0 8px;border-radius:12px;display:inline-flex;align-items:center;gap:3px;color:#fff;font-weight:600;background:#262a44;border:1.5px solid #0d1020;box-shadow:0 3px 8px rgba(0,0,0,.35)}.rc.me{background:#1f4f63;border-color:#0d1020;box-shadow:0 0 0 1px rgba(94,231,255,.55),0 3px 8px rgba(0,0,0,.35)}
 .hb{position:absolute;left:50%;top:50%;font-size:34px;pointer-events:none;z-index:3}
 .replybar{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border-radius:18px;margin-bottom:-4px}.replybar>i{width:3px;align-self:stretch;border-radius:2px;background:#5ee7ff}
 .replybar div{flex:1;min-width:0;display:flex;flex-direction:column}.replybar b{font-size:12px;color:#5ee7ff}.replybar span{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -449,7 +449,7 @@ async function renderMsgs(list){lastList=list;await names([...new Set(list.map(m
   if(mine&&!del){el.dataset.at=t;el.dataset.p=m._p?1:'';const tk=document.createElement('i');tk.className='tick';tm.appendChild(tk)}
   if(big)el.append(tx,tm);else el.append(tm,tx);
   const re=m.re||{},cnt={};Object.entries(re).forEach(([u,e])=>{if(e)(cnt[e]=cnt[e]||[]).push(u)});
-  if(Object.keys(cnt).length&&!del){const r=document.createElement('div');r.className='reacts';Object.entries(cnt).forEach(([e,us])=>{const c=document.createElement('button');c.type='button';c.className='rc'+(us.includes(myId)?' me':'');c.textContent=e+(us.length>1?' '+us.length:'');c.onclick=ev=>{ev.stopPropagation();react(m,e)};r.appendChild(c)});el.appendChild(r)}
+  if(Object.keys(cnt).length&&!del){el.classList.add('hasre');const r=document.createElement('div');r.className='reacts';Object.entries(cnt).forEach(([e,us])=>{const c=document.createElement('button');c.type='button';c.className='rc'+(us.includes(myId)?' me':'');c.textContent=e+(us.length>1?' '+us.length:'');c.onclick=ev=>{ev.stopPropagation();react(m,e)};r.appendChild(c)});el.appendChild(r)}
   if(!del)wire(el,m);box.appendChild(el)});
  if(firstLoad||wasBottom||addedMine)toBottom(false);else{box.scrollTop=prevTop;newBelow+=addedOther;paintDown()}
  paintTicks()}
