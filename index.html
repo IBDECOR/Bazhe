@@ -6,7 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}:root{padding:env(safe-area-inset-top,0px) 0 0}html{background:#05060d;min-height:100%}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}:root{padding:env(safe-area-inset-top,0px) 0 0}html{background:#05060d;min-height:100%}body{-webkit-touch-callout:none}img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}.me img,.ava img,.bigava img,.tile,.petal{pointer-events:none}.petal{pointer-events:auto}.me,.ava,.bigava,.bub{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Bazhe</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
 <style>
@@ -295,7 +295,7 @@ const codeOf=id=>{let h=2166136261;for(const c of id){h^=c.charCodeAt(0);h=Math.
 function disp(r){if(r.type==='dm'){const o=(r.members||[]).find(m=>m!==myId);const f=fam[o]||{};return{name:f.name||profCache[o]?.name||'Друг',photo:f.avatar||'',emoji:'👤'}}return r}
 const nm=id=>id===myId?'Я':(fam[id]?.name||profCache[id]?.name||'Родной');
 let myProf={name:'',status:'',avatar:''},acctAva='',acctName='';
-function paintAva(el,big){const src=myProf.avatar||acctAva,n=myProf.name||acctName;el.innerHTML='';if(src){const im=document.createElement('img');im.src=src;im.alt='';el.appendChild(im)}else el.textContent=(n||'Я')[0].toUpperCase()}
+function paintAva(el,big){const src=myProf.avatar||acctAva,n=myProf.name||acctName;el.innerHTML='';if(src){const im=document.createElement('img');im.src=src;im.alt='';im.draggable=false;el.appendChild(im)}else el.textContent=(n||'Я')[0].toUpperCase()}
 function paintMe(){paintAva($('me'));paintAva($('bigAva'))}
 /* long press */
 (function(){const me=$('me'),arc=$('holdArc');let t0=0,raf=0,fired=false;
