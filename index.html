@@ -6,7 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}:root{padding:env(safe-area-inset-top,0px) 0 0}html{background:#05060d;min-height:calc(100% + env(safe-area-inset-top,0px))}body{min-height:calc(100% + env(safe-area-inset-top,0px))}body{-webkit-touch-callout:none}img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}.me img,.ava img,.bigava img,.tile,.petal{pointer-events:none}.petal{pointer-events:auto}.me,.ava,.bigava,.bub{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}:root{padding:env(safe-area-inset-top,0px) 0 0}html{background:#05060d;height:100%;overflow:hidden}body{position:fixed;inset:0;overflow:hidden}body{-webkit-touch-callout:none}img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}.me img,.ava img,.bigava img,.tile,.petal{pointer-events:none}.petal{pointer-events:auto}.me,.ava,.bigava,.bub{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 <title>Bazhe</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
 <style>
@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);overflow:hidde
 /* liquid glass */
 .lg{background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.04));backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
   border:1px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.35)}
-.app{position:relative;z-index:1;height:calc(100% - env(safe-area-inset-top,0px));max-width:520px;margin:0 auto}
+.app{position:relative;z-index:1;height:100%;max-width:520px;margin:0 auto}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
 
@@ -258,6 +258,7 @@ body.kb .app{position:fixed;top:0;left:0;right:0;margin:0 auto;padding-left:max(
 .post{border-radius:22px;padding:14px 16px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
 .post.old{animation:none}.post .ptx{font-size:16px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}.post .pft{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--mute)}.post .pft .sp{flex:1}
 .post .pr{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 8px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:13px}.post .pr.me{border-color:rgba(94,231,255,.6);background:rgba(94,231,255,.18)}
+.home,.panel{top:env(safe-area-inset-top,0px)!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -662,7 +663,7 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
 $('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
-const APP_VER='v34';$('verLbl').textContent='Версия '+APP_VER;
+const APP_VER='v35';$('verLbl').textContent='Версия '+APP_VER;
 async function hardUpdate(){const b=$('updBtn');b.disabled=true;b.textContent='Обновляю…';
  try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}
  location.replace(location.pathname+'?u='+Date.now())}
@@ -762,7 +763,7 @@ try{setIc(localStorage.getItem('bz_ic')||'color')}catch(_){setIc('color')}
  let full=Math.max(vv.height,innerHeight);
  const typing=()=>{const a=document.activeElement;return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a.type!=='file'};
  function fit(){if(!typing())full=Math.max(full,vv.height);const kb=typing()&&vv.height<full-100;document.body.classList.toggle('kb',kb);
-  if(kb){const top=probe.offsetHeight;app.style.height=(vv.height-top)+'px';app.style.transform=`translateY(${vv.offsetTop+top}px)`;const m=$('msgs');if(m&&curRoom)m.scrollTop=m.scrollHeight}
+  if(kb){const top=probe.offsetHeight;app.style.height=vv.height+'px';app.style.transform=`translateY(${vv.offsetTop}px)`;const m=$('msgs');if(m&&curRoom)m.scrollTop=m.scrollHeight}
   else{app.style.height='';app.style.transform='';if(window.scrollY)window.scrollTo(0,0)}}
  vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);addEventListener('focusin',()=>{fit();setTimeout(fit,120);setTimeout(fit,350)});addEventListener('focusout',()=>setTimeout(fit,100));
  addEventListener('orientationchange',()=>{full=0;setTimeout(fit,400)});
