@@ -358,7 +358,7 @@ function closePortal(){const lp=lastPortal;if(!lp||busy){show(null);return}busy=
  const o=document.createElement('div');o.className='portal';o.style.clipPath='circle(150% at 50% 50%)';document.body.appendChild(o);
  home.style.transition='none';show(null);void home.offsetWidth;
  const el=lp.kind==='me'?$('me'):lp.btn.querySelector('.tile');const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,rad=lp.kind==='me'?r.width/2:30;
- o.style.background=lp.kind==='me'?`radial-gradient(circle at ${x}px ${y}px,#ffd0a8,#ff8a3d 25%,#c2410c 55%,#05060d 95%)`:`radial-gradient(circle at ${x}px ${y}px,${GRAD[lp.p.i][0]},${GRAD[lp.p.i][1]} 40%,#05060d 90%)`;
+ o.style.background=lp.kind==='me'?`${meGrad(x,y)}`:`radial-gradient(circle at ${x}px ${y}px,${GRAD[lp.p.i][0]},${GRAD[lp.p.i][1]} 40%,#05060d 90%)`;
  let t=null;if(lp.kind!=='me'){o.innerHTML=tileHTML(lp.p.i);t=o.firstChild;t.style.left=x+'px';t.style.top=y+'px'}
  const big=Math.hypot(innerWidth,innerHeight),e='cubic-bezier(.7,0,.25,1)';
  const a=o.animate([{clipPath:`circle(${big}px at ${x}px ${y}px)`},{clipPath:`circle(${rad}px at ${x}px ${y}px)`}],{duration:560,easing:e,fill:'forwards'});
@@ -403,7 +403,7 @@ function paintMe(){paintAva($('me'));paintAva($('bigAva'))}
 })();
 function openProfile(){if(busy)return;busy=true;lastPortal={kind:'me'};const me=$('me');me.classList.remove('press');const r=me.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
  $('pName').value=myProf.name||acctName;$('pStatus').value=myProf.status||'';$('pFind').checked=myProf.findable!==false;paintMe();
- const o=document.createElement('div');o.className='portal';o.style.background=`radial-gradient(circle at ${x}px ${y}px,#ffd0a8,#ff8a3d 25%,#c2410c 55%,#05060d 95%)`;document.body.appendChild(o);
+ const o=document.createElement('div');o.className='portal';o.style.background=`${meGrad(x,y)}`;document.body.appendChild(o);
  const big=Math.hypot(innerWidth,innerHeight),e='cubic-bezier(.7,0,.2,1)';
  me.animate([{transform:'scale(.82)'},{transform:'scale(1.35)'}],{duration:300,easing:'cubic-bezier(.3,1.6,.5,1)'});
  o.animate([{clipPath:`circle(${r.width/2}px at ${x}px ${y}px)`},{clipPath:`circle(${big}px at ${x}px ${y}px)`}],{duration:650,easing:e,fill:'forwards'});
@@ -593,7 +593,7 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
 $('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
-const APP_VER='v20';$('verLbl').textContent='Версия '+APP_VER;
+const APP_VER='v21';$('verLbl').textContent='Версия '+APP_VER;
 async function hardUpdate(){const b=$('updBtn');b.disabled=true;b.textContent='Обновляю…';
  try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}
  location.replace(location.pathname+'?u='+Date.now())}
@@ -607,6 +607,7 @@ rooms=local.rooms;renderRooms();paintMe();
 
 
 /* ===== themes ===== */
+function meGrad(x,y){const t=THEMES.find(z=>z.k===(document.body.dataset.bg||'aurora'))||THEMES[0];return `radial-gradient(circle at ${x}px ${y}px,${t.c[2]},${t.c[0]} 28%,${t.c[1]} 58%,${t.b} 96%)`}
 const THEMES=[{k:'aurora',n:'Аврора',c:['#2b4dff','#ff5a3d','#00c2a8'],b:'#05060d'},{k:'onyx',n:'Чёрное стекло',c:['#1a3cff','#0b1840','#2a5bff'],b:'#000',st:1},{k:'space',n:'Космос',c:['#1b2a6b','#5a2a8a','#0d3b4f'],b:'#020208',st:1},
  {k:'ocean',n:'Океан',c:['#0066ff','#00b3c7','#00d49a'],b:'#010a14'},{k:'sunset',n:'Закат',c:['#ff4f6d','#ff9a3d','#7a2aff'],b:'#120512'},{k:'lava',n:'Лава',c:['#ff2a00','#ff7a00','#8a0020'],b:'#0d0202'},
  {k:'forest',n:'Лес',c:['#1fa35b','#7ad13a','#0a5c4a'],b:'#020a05'},{k:'mono',n:'Графит',c:['#5a5f6e','#8a8f9e','#2a2d36'],b:'#060608'}];
