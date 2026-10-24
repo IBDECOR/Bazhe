@@ -232,6 +232,22 @@ body[data-bg=space] .stars,body[data-bg=onyx] .stars{opacity:1}
 .viewer{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.85);display:grid;place-items:center;padding:20px}.viewer img{max-width:100%;max-height:80vh;border-radius:20px}
 .mlist{display:flex;flex-direction:column;gap:6px;max-height:30vh;overflow:auto}.mrow{display:flex;align-items:center;gap:10px}.mrow .ava{width:34px;height:34px;border-radius:50%;font-size:14px;cursor:default}
 .sheet{max-height:calc(100dvh - 40px);overflow-y:auto}
+
+[data-ic=glass] .tile{background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.06))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 24px color-mix(in srgb,var(--c2) 45%,transparent)!important}
+[data-ic=glass] .tile svg{filter:drop-shadow(0 0 6px var(--c1))}
+[data-ic=neon] .tile{background:#07080f!important;border:2px solid var(--c1);box-shadow:0 0 12px var(--c1),0 0 28px color-mix(in srgb,var(--c2) 60%,transparent),inset 0 0 12px color-mix(in srgb,var(--c1) 40%,transparent)!important}
+[data-ic=neon] .tile::after{display:none}[data-ic=neon] .tile svg{filter:drop-shadow(0 0 4px var(--c1)) drop-shadow(0 0 10px var(--c1))}
+[data-ic=minimal] .tile{background:none!important;box-shadow:none!important}[data-ic=minimal] .tile::after{display:none}[data-ic=minimal] .tile svg{width:40px;height:40px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)) drop-shadow(0 0 14px var(--c1))}
+[data-ic=round] .tile{border-radius:50%!important}
+[data-ic=mono] .tile{background:linear-gradient(145deg,#4a4f60,#20232c)!important;box-shadow:0 10px 24px rgba(0,0,0,.45),inset 0 1px 1px rgba(255,255,255,.35)!important}[data-ic=mono] .tile svg{filter:grayscale(1) brightness(1.4)}
+[data-ic=gold] .tile{background:linear-gradient(145deg,#fff1b8,#e0b54a 45%,#8a5a12)!important;box-shadow:0 10px 24px rgba(224,181,74,.45),inset 0 1px 1px #fff,inset 0 -3px 6px rgba(90,50,0,.35)!important}[data-ic=gold] .tile svg{filter:brightness(0) invert(.12) sepia(1) saturate(3) hue-rotate(-10deg)}
+[data-ic=silver] .tile{background:linear-gradient(145deg,#ffffff,#c9ced8 45%,#7d8494)!important;box-shadow:0 10px 24px rgba(0,0,0,.4),inset 0 1px 1px #fff,inset 0 -3px 6px rgba(0,0,0,.25)!important}[data-ic=silver] .tile svg{filter:brightness(0) invert(.18)}
+[data-ic=candy] .tile{border-radius:50% 50% 50% 18%!important;background:radial-gradient(circle at 30% 25%,#fff8,transparent 40%),linear-gradient(145deg,var(--c1),var(--c2))!important;transform:rotate(-6deg)}
+.icsets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-bottom:6px}
+.ics{position:relative;border-radius:20px;padding:14px 10px 10px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;gap:10px;transition:transform .3s cubic-bezier(.3,1.6,.5,1),border-color .3s}
+.ics:active{transform:scale(.95)}.ics.on{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+.ics .row{display:flex;gap:8px;justify-content:center}.ics .tile{width:40px;height:40px;border-radius:13px}.ics .tile svg{width:22px;height:22px}[data-ic=minimal].ics .tile svg{width:28px;height:28px}
+.ics b{font-size:13px}.ics em{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#fff;color:#000;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;opacity:0;transition:.3s}.ics.on em{opacity:1}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -279,7 +295,7 @@ body[data-bg=space] .stars,body[data-bg=onyx] .stars{opacity:1}
 
   <section class="panel" id="pSet">
     <div class="bar lg"><button class="back lg" data-back aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Настройки</h2></div>
-    <div class="list"><button type="button" class="pushban lg" id="a2hsBtn"><span>📲</span><div><b>Добавить Bazhe на экран «Домой»</b><small>Иконка на рабочем столе, полный экран и уведомления</small></div></button><p class="sect">Фон</p><div class="themes" id="themes"></div></div>
+    <div class="list"><button type="button" class="pushban lg" id="a2hsBtn"><span>📲</span><div><b>Добавить Bazhe на экран «Домой»</b><small>Иконка на рабочем столе, полный экран и уведомления</small></div></button><p class="sect">Иконки</p><div class="icsets" id="icsets"></div><p class="sect">Фон</p><div class="themes" id="themes"></div></div>
   </section>
 
   <section class="panel" id="pProf">
@@ -317,7 +333,7 @@ const ICON={
  list:'<path d="M5 7h15l-1.8 9.2a2 2 0 01-2 1.8H8.8a2 2 0 01-2-1.6z" fill="#fff"/><path d="M2 3.5h3l1 3.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="9" cy="20.5" r="1.6" fill="#fff"/><circle cx="16" cy="20.5" r="1.6" fill="#fff"/><path d="M9.5 12l2 2 4-4" stroke="#00b894" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 const GRAD={gear:['#9aa7c7','#4a5578'],chat:['#5ea2ff','#2b4dff'],reel:['#ff7aa8','#ff2d55'],call:['#5cf0a0','#0fa958'],photo:['#ffd86b','#ff8a00'],fam:['#d38bff','#7b2bff'],list:['#5ff0d5','#00a389']};
-const tileHTML=k=>`<div class="tile" style="background:linear-gradient(145deg,${GRAD[k][0]},${GRAD[k][1]});box-shadow:0 10px 24px ${GRAD[k][1]}66,inset 0 1px 1px rgba(255,255,255,.7),inset 0 -2px 6px rgba(0,0,0,.18)"><svg viewBox="0 0 24 24">${ICON[k]}</svg></div>`;
+const tileHTML=k=>`<div class="tile" style="--c1:${GRAD[k][0]};--c2:${GRAD[k][1]};background:linear-gradient(145deg,${GRAD[k][0]},${GRAD[k][1]});box-shadow:0 10px 24px ${GRAD[k][1]}66,inset 0 1px 1px rgba(255,255,255,.7),inset 0 -2px 6px rgba(0,0,0,.18)"><svg viewBox="0 0 24 24">${ICON[k]}</svg></div>`;
 const PETALS=[
  {k:'chats',t:'Чаты',i:'chat'},
  {k:'reels',t:'Ролики',i:'reel',soon:'Короткие семейные ролики: снял, выложил, все посмотрели.'},
@@ -397,7 +413,7 @@ function portal(p,btn){if(busy)return;busy=true;lastPortal={kind:'petal',p,btn};
   t.animate([{transform:'scale(1)',opacity:1},{transform:'scale(9)',opacity:0}],{duration:620,easing:e,fill:'forwards'});
   setTimeout(()=>{openPetal(p);o.animate([{opacity:1},{opacity:0}],{duration:420,easing:'ease-out',fill:'forwards'}).onfinish=()=>{o.remove();btn.classList.remove('bulk');busy=false}},470);
  },260);}
-function openPetal(p){if(p.k==='chats')return show('pChats');if(p.k==='set'){paintThemes();return show('pSet')}$('soonTitle').textContent=p.t;$('soonText').textContent=p.soon+' Появится в следующей версии.';$('soonTile').outerHTML=tileHTML(p.i).replace('class="tile"','class="tile" id="soonTile"');show('pSoon');}
+function openPetal(p){if(p.k==='chats')return show('pChats');if(p.k==='set'){paintThemes();paintIc();return show('pSet')}$('soonTitle').textContent=p.t;$('soonText').textContent=p.soon+' Появится в следующей версии.';$('soonTile').outerHTML=tileHTML(p.i).replace('class="tile"','class="tile" id="soonTile"');show('pSoon');}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2400)}
 
 /* ---- data ---- */
@@ -621,7 +637,7 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
 $('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
-const APP_VER='v30';$('verLbl').textContent='Версия '+APP_VER;
+const APP_VER='v31';$('verLbl').textContent='Версия '+APP_VER;
 async function hardUpdate(){const b=$('updBtn');b.disabled=true;b.textContent='Обновляю…';
  try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}
  location.replace(location.pathname+'?u='+Date.now())}
@@ -703,6 +719,16 @@ let countSeen=null;function soundCheck(){const m={};let ding=false;rooms.forEach
    else{pp.style.transform='translateX(100%)';setTimeout(()=>{back&&back.click();pp.style.transform='';pp.style.opacity='';setTimeout(()=>{pp.style.transition=''},50)},260)}}
   else{pp.style.transform='';pp.style.opacity='';setTimeout(()=>{pp.style.transition=''},300)}};
  addEventListener('touchend',end,{passive:true});addEventListener('touchcancel',end,{passive:true})})();
+
+
+/* ===== icon styles ===== */
+const ICSETS=[{k:'color',n:'Цветные'},{k:'glass',n:'Стекло'},{k:'neon',n:'Неон'},{k:'minimal',n:'Минимал'},{k:'round',n:'Круглые'},{k:'candy',n:'Капли'},{k:'mono',n:'Графит'},{k:'silver',n:'Серебро'},{k:'gold',n:'Золото'}];
+function setIc(k,save){document.body.dataset.ic=k;if(save)try{localStorage.setItem('bz_ic',k)}catch(_){}paintIc()}
+function paintIc(){const box=$('icsets');if(!box)return;const cur=document.body.dataset.ic||'color';box.innerHTML='';
+ ICSETS.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='ics'+(t.k===cur?' on':'');b.dataset.ic=t.k;
+  b.innerHTML='<div class="row">'+['chat','photo','gear'].map(tileHTML).join('')+'</div><b></b><em>✓</em>';b.querySelector('b').textContent=t.n;
+  b.onclick=()=>{setIc(t.k,true);petEls.forEach((p,i)=>p.querySelector('.tile').animate([{transform:'scale(.6)'},{transform:'scale(1.15)'},{transform:'none'}],{duration:450,delay:i*50,easing:'cubic-bezier(.3,1.6,.5,1)'}))};box.appendChild(b)})}
+try{setIc(localStorage.getItem('bz_ic')||'color')}catch(_){setIc('color')}
 
 /* ===== push notifications ===== */
 const PUSH_URL='https://bazhe-push.barkanchik99.workers.dev';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
