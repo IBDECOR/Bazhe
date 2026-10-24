@@ -169,6 +169,8 @@ input:-webkit-autofill{-webkit-text-fill-color:#f4f6fb;-webkit-box-shadow:0 0 0 
 #pProf .copy{height:32px;padding:0 12px;font-size:13px;flex:none}
 #pProf .bigava{width:116px;height:116px;font-size:44px}#pProf .camera{margin-top:84px;right:calc(50% - 62px);width:36px;height:36px}
 #pProf .save{height:48px;flex-shrink:0}#pProf .act{height:46px}
+.tick{display:inline-block;vertical-align:-1px;margin-left:4px;width:16px;height:10px}.tick svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tick.p{width:11px;height:11px;color:var(--mute)}.tick.s{width:12px;color:rgba(235,240,255,.75)}.tick.r{width:17px;color:#5ee7ff;filter:drop-shadow(0 0 3px rgba(94,231,255,.6))}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head><body>
@@ -392,7 +394,13 @@ function cropTo(f,S,cb){const img=new Image();img.onload=()=>{const c=document.c
 
 const ms=v=>v&&v.toMillis?v.toMillis():(v||0);
 const unread=r=>Math.max(0,(r.count||0)-((r.read||{})[myId]||0));
-function markRead(r){if(!db||!r||unread(r)<=0)return;db.doc('rooms/'+r.id).update({['read.'+myId]:r.count||0}).catch(()=>{})}
+const SVG1='<svg viewBox="0 0 16 11"><path d="M1.5 6l3 3 7-7.5"/></svg>',SVG2='<svg viewBox="0 0 20 11"><path d="M1.5 6l3 3 7-7.5M8.5 8.5l1 .5 7-7.5"/></svg>',SVGC='<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.5V6l1.8 1.2"/></svg>';
+function paintTicks(){if(!curRoom)return;const others=(curRoom.members||[]).filter(x=>x!==myId),seen=curRoom.seen||{};
+ const minSeen=others.length?Math.min(...others.map(o=>ms(seen[o]))):0;
+ document.querySelectorAll('#msgs .msg.mine').forEach(el=>{const t=el.querySelector('.tick');if(!t)return;let st=el.dataset.p?'p':(minSeen>=+el.dataset.at-1500?'r':'s');
+  if(t.dataset.s===st)return;const was=t.dataset.s;t.dataset.s=st;t.className='tick '+st;t.innerHTML=st==='p'?SVGC:st==='r'?SVG2:SVG1;
+  if(was&&st==='r')t.animate([{transform:'scale(.4)',opacity:.3},{transform:'scale(1.3)'},{transform:'scale(1)',opacity:1}],{duration:420,easing:'cubic-bezier(.3,1.6,.5,1)'})})}
+function markRead(r){if(!db||!r||unread(r)<=0)return;db.doc('rooms/'+r.id).update({['read.'+myId]:r.count||0,['seen.'+myId]:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{})}
 function paintBadges(){const tot=rooms.reduce((n,r)=>n+(r===curRoom||r.id===curRoom?.id?0:unread(r)),0);const p=petEls[0];let b=p.querySelector('.badge');if(tot>0){if(!b){b=document.createElement('span');b.className='badge';p.appendChild(b);b.animate([{transform:'scale(0)'},{transform:'scale(1.3)'},{transform:'scale(1)'}],{duration:450,easing:'cubic-bezier(.3,1.6,.5,1)'})}b.textContent=tot>99?'99+':tot}else if(b)b.remove();try{if(navigator.setAppBadge)tot?navigator.setAppBadge(tot):navigator.clearAppBadge()}catch(_){}}
 function fmt(ts){const d=new Date(ms(ts));return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}
 async function renderMsgs(list){await names([...new Set(list.map(m=>m.from))]);const box=$('msgs');box.innerHTML='';
@@ -401,11 +409,11 @@ async function renderMsgs(list){await names([...new Set(list.map(m=>m.from))]);c
  list.forEach(m=>{const el=document.createElement('div');const cont=prev&&prev.from===m.from&&ms(m.at)-ms(prev.at)<5*60e3;prev=m;
   const big=emo.test(m.text)&&!/^[\d#*\s]+$/.test(m.text);el.className='msg'+(m.from===myId?' mine':'')+(cont?' cont':'')+(big?' big':'');
   if(m.from!==myId&&!cont){const w=document.createElement('div');w.className='who';w.textContent=nm(m.from);el.appendChild(w)}
-  const tx=document.createElement('span');tx.className='tx';tx.textContent=m.text;const tm=document.createElement('time');tm.textContent=fmt(m.at);if(big){el.append(tx,tm)}else{el.append(tm,tx)}box.appendChild(el)});
- box.scrollTop=box.scrollHeight;}
+  const tx=document.createElement('span');tx.className='tx';tx.textContent=m.text;const tm=document.createElement('time');tm.textContent=fmt(m.at);if(m.from===myId){el.dataset.at=ms(m.at);el.dataset.p=m._p?1:'';const tk=document.createElement('i');tk.className='tick';tm.appendChild(tk)}if(big){el.append(tx,tm)}else{el.append(tm,tx)}box.appendChild(el)});
+ box.scrollTop=box.scrollHeight;paintTicks()}
 
 function openRoom(r){curRoom=r;markRead(r);paintBadges();$('roomTitle').textContent=disp(r).name;avaFill($('roomAva'),r);show('pRoom');
- if(db){unsubMsgs=db.collection('rooms/'+r.id+'/msgs').orderBy('at','asc').limit(300).onSnapshot(s=>renderMsgs(s.docs.map(d=>d.data({serverTimestamps:'estimate'}))),e=>toast('Не удалось загрузить сообщения'));}
+ if(db){unsubMsgs=db.collection('rooms/'+r.id+'/msgs').orderBy('at','asc').limit(300).onSnapshot(s=>renderMsgs(s.docs.map(d=>({...d.data({serverTimestamps:'estimate'}),_p:d.metadata.hasPendingWrites}))),e=>toast('Не удалось загрузить сообщения'));}
  else renderMsgs(local.msgs[r.id]||[]);
  setTimeout(()=>$('text').focus(),450);}
 function closeRoom(){if(unsubMsgs){unsubMsgs();unsubMsgs=null}curRoom=null;renderRooms();paintBadges()}
@@ -463,7 +471,7 @@ auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];
   if(!ensured){ensured=true;const pr={name:myProf.name||acctName,status:myProf.status||'',avatar:myProf.avatar||'',code:myCode,findable:fam[myId]?.findable??true,at:Date.now()};
    if(!fam[myId]||fam[myId].code!==myCode)fdb.doc('profiles/'+myId).set(pr,{merge:true}).catch(()=>{});
    fdb.doc('lookup/'+myCode).set({uid:myId}).catch(()=>{});if(u.email)fdb.doc('lookup/'+u.email.toLowerCase()).set({uid:myId}).catch(()=>{})}},()=>{}));
- db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>ms(b.at)-ms(a.at));if(curRoom){const c=rooms.find(x=>x.id===curRoom.id);if(c){Object.assign(curRoom,c);markRead(c)}}renderRooms();paintBadges()},e=>toast('Нет доступа к чатам')));
+ db=fdb;unsubs.push(db.collection('rooms').where('members','array-contains',myId).onSnapshot(s=>{rooms=s.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>ms(b.at)-ms(a.at));if(curRoom){const c=rooms.find(x=>x.id===curRoom.id);if(c){Object.assign(curRoom,c);markRead(c);paintTicks()}}renderRooms();paintBadges()},e=>toast('Нет доступа к чатам')));
 });
 function authSheet(){sheet((sh,close)=>{let mode='in';const h=document.createElement('div');h.className='head';h.innerHTML='<div class="ava">✦</div><b>Вход в Bazhe</b>';sh.appendChild(h);
  const em=field(sh,'Почта','you@mail.ru',80);em.type='email';em.autocomplete='email';em.inputMode='email';
