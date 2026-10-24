@@ -290,6 +290,7 @@ body[data-bg=space] .stars,body[data-bg=onyx] .stars{opacity:1}
       <label class="idrow lg" style="cursor:pointer"><div><small>Конфиденциальность</small><span style="font-weight:600">Находить меня по почте</span></div><input type="checkbox" id="pFind" checked style="width:22px;height:22px;accent-color:#ff8a3d"></label>
       <button class="save" id="saveProf">Сохранить</button>
       <p class="sect" style="text-transform:none;letter-spacing:0" id="myEmail"></p>
+      <button type="button" class="act" id="a2hsProf" style="width:100%;max-width:400px">📲 Добавить на экран «Домой»</button>
       <button type="button" class="act" id="updBtn" style="width:100%;max-width:400px">⟳ Обновить приложение</button>
       <p class="sect" style="text-transform:none;letter-spacing:0;justify-content:center" id="verLbl"></p>
       <button type="button" class="act red" id="logout" style="width:100%;max-width:400px">Выйти из аккаунта</button>
@@ -615,7 +616,7 @@ $('optGroup').onclick=()=>{fabToggle(false);sheet((sh,close)=>{const h=document.
   if(db){try{await db.collection('rooms').add(r);toast('Группа «'+n+'» создана')}catch(_){toast('Не удалось создать группу');return}}else{r.id='r'+Date.now();local.rooms.push(r);rooms=local.rooms;renderRooms()}close()}));
  sh.appendChild(btn('Отмена','',close));setTimeout(()=>nameI.focus(),400)})};
 $('pushBtn').onclick=enablePush;$('pushBanner').onclick=enablePush;
-const APP_VER='v24';$('verLbl').textContent='Версия '+APP_VER;
+const APP_VER='v25';$('verLbl').textContent='Версия '+APP_VER;
 async function hardUpdate(){const b=$('updBtn');b.disabled=true;b.textContent='Обновляю…';
  try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.update().catch(()=>{})));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(_){}
  location.replace(location.pathname+'?u='+Date.now())}
@@ -658,7 +659,9 @@ function a2hsSheet(){if(standalone()){toast('Bazhe уже на экране «Д
   const d=document.createElement('div');d.className='a2hs';d.innerHTML='<ol><li>Нажми <b>«Поделиться»</b> <svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 12v8h14v-8"/></svg> внизу Safari (или в меню <b>⋯</b>)</li><li>Пролистай и выбери <b>«На экран „Домой“»</b></li><li>Нажми <b>«Добавить»</b> и открывай Bazhe с иконки</li></ol>';sh.appendChild(d);
   sh.appendChild(btn('Понятно','main',()=>{ar.remove();close()}));setTimeout(()=>document.body.appendChild(ar),300);
   const w=sh.parentNode;w.addEventListener('click',e=>{if(e.target===w)ar.remove()})})}
-$('a2hsBtn').onclick=a2hsSheet;if(standalone())$('a2hsBtn').hidden=true;
+let bip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();bip=e});
+async function addHome(){if(standalone()){toast('Bazhe уже на экране «Домой» ✓');return}if(bip){bip.prompt();const r=await bip.userChoice.catch(()=>({}));if(r.outcome==='accepted')toast('Bazhe добавлен ✓');bip=null;return}a2hsSheet()}
+$('a2hsBtn').onclick=addHome;$('a2hsProf').onclick=addHome;if(standalone()){$('a2hsBtn').hidden=true;$('a2hsProf').hidden=true}
 
 /* ===== push notifications ===== */
 const PUSH_URL='https://bazhe-push.barkanchik99.workers.dev';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
