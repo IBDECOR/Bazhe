@@ -557,7 +557,7 @@ $('copyId').onclick=async()=>{try{await navigator.clipboard.writeText(myCode);to
 rooms=local.rooms;renderRooms();paintMe();
 
 /* ===== push notifications ===== */
-const PUSH_URL='';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
+const PUSH_URL='https://bazhe-push.barkanchik99.workers.dev';const VAPID_PUB='BJ790Cbvyw20niKi71GSHdb-EcC9brjZZHhczxN_gyDMis_H0HbCZDWxV_mrJLGrT_iuYVLdbugdFKiyk8YeQcs';
 const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
 function pushState(){if(!pushOK())return'no';if(Notification.permission==='denied')return'denied';return Notification.permission==='granted'&&(myProf.pushOn!==false)&&(fam[myId]?.pushSubs||[]).length?'on':'off'}
 function paintPush(){const st=pushState(),b=$('pushBtn'),bn=$('pushBanner');
